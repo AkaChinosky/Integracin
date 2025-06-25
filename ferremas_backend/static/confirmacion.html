@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compra Confirmada</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #e9f7ef;
+    }
+    .confirmation-box {
+      max-width: 700px;
+      margin: 80px auto;
+      background-color: white;
+      padding: 3rem;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .emoji {
+      font-size: 4rem;
+      text-align: center;
+    }
+    .receipt-table th, .receipt-table td {
+      vertical-align: middle;
+    }
+    .total-row {
+      font-weight: bold;
+      border-top: 2px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="confirmation-box">
+    <div class="emoji">✅</div>
+    <h2 class="text-center mb-4">¡Compra simulada realizada con éxito!</h2>
+
+    <div id="boletaContainer" class="mt-4">
+      <h5 class="text-center mb-3">🧾 Comprobante de Compra</h5>
+      <p class="text-center" id="fechaCompra"></p>
+      <div class="table-responsive">
+        <table class="table table-bordered receipt-table">
+          <thead class="table-light">
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Precio Unitario (CLP)</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody id="boletaBody"></tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="3" class="text-end">Total (CLP)</td>
+              <td id="totalCLP"></td>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-end">Total Aproximado (USD)</td>
+              <td id="totalUSD"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="/" class="btn btn-primary">Volver al inicio</a>
+    </div>
+  </div>
+
+  <script>
+ function cargarBoleta() {
+    const data = JSON.parse(localStorage.getItem('ultima_compra'));
+    if (!data || !data.productos) {
+      document.getElementById('boletaContainer').innerHTML = '<p>No hay datos de compra para mostrar.</p>';
+      return;
+    }
+
+    const productos = data.productos;
+    const fecha = data.fecha;
+    const totalCLP = data.totalCLP || 0;
+    const totalUSD = data.totalUSD || 0;
+
+    if (fecha) {
+      document.getElementById('fechaCompra').textContent = `Fecha y hora: ${fecha}`;
+    }
+
+    const tbody = document.getElementById('boletaBody');
+    productos.forEach(item => {
+      const subtotal = item.precio * item.cantidad;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${item.nombre}</td>
+        <td>${item.cantidad}</td>
+        <td>$${item.precio.toLocaleString()}</td>
+        <td>$${subtotal.toLocaleString()}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('totalCLP').textContent = `$${totalCLP.toLocaleString()}`;
+    document.getElementById('totalUSD').textContent = `$${totalUSD.toFixed(2)} USD`;
+
+    localStorage.removeItem('ultima_compra');
+  }
+
+  cargarBoleta();
+  </script>
+</body>
+</html>

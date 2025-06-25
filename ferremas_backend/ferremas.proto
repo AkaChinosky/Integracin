@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package ferremas;
+
+service FerremasService {
+  rpc ListarProductos(SucursalRequest) returns (ProductosResponse);
+  rpc ListarSucursales(Empty) returns (SucursalesResponse);
+}
+
+message Empty {}
+
+message SucursalRequest {
+  int32 sucursal_id = 1;
+}
+
+message Producto {
+  int32 id = 1;
+  string nombre = 2;
+  float precio = 3;
+  int32 stock = 4;
+}
+
+message Sucursal {
+  int32 id = 1;
+  string nombre = 2;
+  string direccion = 3;
+}
+
+message ProductosResponse {
+  repeated Producto productos = 1;
+}
+
+message SucursalesResponse {
+  repeated Sucursal sucursales = 1;
+}
