@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agregar Producto - FERREMAS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .is-invalid {
+      border-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-5">
+    <h2 class="mb-4">Agregar Nuevo Producto al Inventario 🆕</h2>
+
+    <form id="formProducto" class="card p-4 shadow-sm" novalidate>
+      <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre del producto:</label>
+        <input type="text" class="form-control" id="nombre" required minlength="3" maxlength="100">
+        <div class="invalid-feedback">Ingresa un nombre válido (mínimo 3 caracteres).</div>
+      </div>
+      <div class="mb-3">
+        <label for="precio" class="form-label">Precio (CLP):</label>
+        <input type="number" class="form-control" id="precio" required min="1" max="100000000">
+        <div class="invalid-feedback">El precio debe ser mayor a 0.</div>
+      </div>
+      <div class="mb-3">
+        <label for="stock" class="form-label">Stock:</label>
+        <input type="number" class="form-control" id="stock" required min="0" max="100000">
+        <div class="invalid-feedback">El stock debe ser igual o mayor a 0.</div>
+      </div>
+      <div class="mb-3">
+        <label for="sucursal" class="form-label">Sucursal:</label>
+        <select id="sucursal" class="form-select" required>
+          <option value="">Seleccione una sucursal</option>
+        </select>
+        <div class="invalid-feedback">Selecciona una sucursal válida.</div>
+      </div>
+      <button type="submit" class="btn btn-success">Agregar Producto</button>
+    </form>
+
+    <div id="mensaje" class="mt-4"></div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:5000';
+
+    // Cargar sucursales al select
+    async function cargarSucursales() {
+      try {
+        const res = await fetch(`${API_BASE}/grpc/sucursales`);
+        const data = await res.json();
+        const select = document.getElementById('sucursal');
+        data.forEach(s => {
+          const option = document.createElement('option');
+          option.value = s.id;
+          option.textContent = `${s.nombre} - ${s.direccion}`;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error('Error cargando sucursales:', err);
+      }
+    }
+
+    // Validar campos y enviar
+    document.getElementById('formProducto').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const nombre = document.getElementById('nombre');
+      const precio = document.getElementById('precio');
+      const stock = document.getElementById('stock');
+      const sucursal = document.getElementById('sucursal');
+
+      // Limpia errores previos
+      [nombre, precio, stock, sucursal].forEach(input => input.classList.remove('is-invalid'));
+
+      let valido = true;
+
+      if (nombre.value.trim().length < 3) {
+        nombre.classList.add('is-invalid');
+        valido = false;
+      }
+
+      if (precio.value <= 0 || precio.value > 100000000) {
+        precio.classList.add('is-invalid');
+        valido = false;
+      }
+
+      if (stock.value < 0 || stock.value > 100000) {
+        stock.classList.add('is-invalid');
+        valido = false;
+      }
+
+      if (!sucursal.value) {
+        sucursal.classList.add('is-invalid');
+        valido = false;
+      }
+
+      if (!valido) return;
+
+      // Envío al backend
+      const res = await fetch(`${API_BASE}/agregar-producto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: nombre.value.trim(),
+          precio: parseInt(precio.value),
+          stock: parseInt(stock.value),
+          sucursal_id: parseInt(sucursal.value)
+        })
+      });
+
+      const msgDiv = document.getElementById('mensaje');
+      msgDiv.className = '';
+      if (res.ok) {
+        msgDiv.textContent = '✅ Producto agregado con éxito. Redirigiendo...';
+        msgDiv.classList.add('alert', 'alert-success');
+        form.reset();
+        setTimeout(() => window.location.href = '/', 1500);
+      } else {
+        const err = await res.json();
+        msgDiv.textContent = `❌ Error: ${err.error || 'No se pudo agregar el producto'}`;
+        msgDiv.classList.add('alert', 'alert-danger');
+      }
+    });
+
+    cargarSucursales();
+  </script>
+</body>
+</html>
